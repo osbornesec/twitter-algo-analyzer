@@ -1,0 +1,88 @@
+# Strategy Configuration
+# This file defines the growth strategy and priorities.
+
+# How many recommendations to generate at once
+recommendation_count: 10
+
+# Keywords to monitor for high-engagement conversations
+# These are used to search for relevant tweets to engage with.
+keywords_to_monitor:
+  - "machine learning"
+  - "LLM"
+  - "prompt engineering"
+  - "AGI"
+  - "PyTorch"
+  - "TensorFlow"
+  - "Claude Code"
+  - "Codex CLI"
+  - "Anthropic"
+  - "OpenAI"
+
+# Influential accounts to monitor for engagement opportunities.
+# Engaging with their content early can lead to high visibility.
+influencers_to_monitor:
+  - "ylecun"
+  - "karpathy"
+  - "JeffDean"
+  - "AndrewYNg"
+  - "demishassabis"
+
+# --- Scoring Configuration ---
+# This section defines how to score engagement opportunities (e.g., tweets).
+# The score is a weighted sum of several factors.
+
+opportunity_scoring:
+  # Weights for the primary engagement metrics.
+  # These are normalized, so their sum doesn't have to be 1.
+  metric_weights:
+    likes: 0.2
+    replies: 0.5
+    retweets: 0.3
+    views: 0.1 # Added views to consider reach
+
+  # Time decay factor. Newer tweets are more valuable.
+  # Score is multiplied by exp(-decay_rate * age_in_hours).
+  # A higher value means a steeper drop-off in score over time.
+  time_decay:
+    decay_rate: 0.1 # e.g., a 24-hour-old tweet's score is multiplied by exp(-0.1*24) ~= 0.09
+
+  # Author-based scoring modifiers.
+  # These are multipliers applied to the score based on the author's profile.
+  author_modifiers:
+    # Multiplier for tweets from influencers listed above.
+    is_influencer_multiplier: 1.5
+    # Bonus for authors with a high follower count.
+    # The bonus is calculated as: 1 + (followers_bonus * log10(followers/1000)).
+    # This gives diminishing returns for very high follower counts.
+    followers_bonus:
+      factor: 0.1
+      min_followers_for_bonus: 1000
+    # Bonus for authors with a good follower-to-following ratio.
+    # The bonus is calculated as: 1 + (ratio_bonus * min(5, ratio)).
+    follower_ratio_bonus:
+      factor: 0.05
+      min_ratio_for_bonus: 2.0
+
+  # Content-based scoring modifiers.
+  # These adjust the score based on the tweet's content.
+  content_modifiers:
+    # Multiplier for tweets that ask a question, as they are more likely to
+    # invite a reply.
+    contains_question_multiplier: 1.3
+    # Multiplier for tweets containing media (images/videos).
+    contains_media_multiplier: 1.1
+    # Penalty for tweets that contain external links, which can sometimes
+    # be less conversational.
+    contains_link_penalty: 0.8
+    # Ideal length range for a tweet to be considered for engagement.
+    # A small bonus is applied if the tweet is within this range.
+    ideal_length_range:
+      min: 50
+      max: 200
+      bonus: 1.1
+
+# Thresholds for different recommendation priorities.
+# The final score is compared against these thresholds to categorize recommendations.
+priority_thresholds:
+  strategic: 0.8 # e.g., ENGAGE_WITH_INFLUENCER
+  growth: 0.6      # e.g., REPLY_TO_HIGH_ENGAGEMENT_TWEET
