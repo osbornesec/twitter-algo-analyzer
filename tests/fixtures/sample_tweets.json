@@ -1,0 +1,235 @@
+{
+  "tweets": [
+    {
+      "id": "1234567890123456789",
+      "text": "Just discovered an amazing new machine learning library! 🚀 Anyone else working with neural networks lately?",
+      "user": {
+        "id": "987654321",
+        "username": "tech_enthusiast",
+        "displayName": "Tech Enthusiast",
+        "bio": "Passionate about AI and machine learning. Building the future one algorithm at a time.",
+        "avatar": "https://pbs.twimg.com/profile_images/user123.jpg",
+        "verified": true,
+        "followers": 15420,
+        "following": 892,
+        "location": "San Francisco, CA",
+        "url": "https://techblog.example.com"
+      },
+      "createdAt": "2024-03-15T14:30:00Z",
+      "engagement": {
+        "likes": 245,
+        "retweets": 67,
+        "replies": 23,
+        "views": 3420
+      },
+      "urls": [
+        {
+          "url": "https://github.com/example/ml-library",
+          "expandedUrl": "https://github.com/example/ml-library",
+          "displayUrl": "github.com/example/ml-lib…"
+        }
+      ],
+      "hashtags": ["#MachineLearning", "#AI"],
+      "mentions": [],
+      "media": [],
+      "isRetweet": false,
+      "isReply": false,
+      "isThread": false,
+      "threadPosition": null,
+      "quotedTweet": null,
+      "retweetedTweet": null,
+      "features": {
+        "hasQuestion": true,
+        "hasMedia": false,
+        "hasLinks": true,
+        "hasHashtags": true,
+        "hasMentions": false,
+        "length": 104,
+        "wordCount": 17,
+        "sentiment": "positive",
+        "topics": ["technology", "machine learning"],
+        "language": "en"
+      }
+    },
+    {
+      "id": "1234567890123456790",
+      "text": "Building a new API endpoint today. Here's a quick thread on best practices for REST API design 🧵",
+      "user": {
+        "id": "123456789",
+        "username": "dev_guru",
+        "displayName": "Development Guru",
+        "bio": "Senior Software Engineer | API Design Expert | Open Source Contributor",
+        "avatar": "https://pbs.twimg.com/profile_images/dev456.jpg",
+        "verified": false,
+        "followers": 8950,
+        "following": 1240,
+        "location": "Remote",
+        "url": "https://devguru.dev"
+      },
+      "createdAt": "2024-03-15T16:45:00Z",
+      "engagement": {
+        "likes": 89,
+        "retweets": 34,
+        "replies": 12,
+        "views": 1230
+      },
+      "urls": [],
+      "hashtags": ["#API", "#WebDev"],
+      "mentions": [],
+      "media": [],
+      "isRetweet": false,
+      "isReply": false,
+      "isThread": true,
+      "threadPosition": 1,
+      "quotedTweet": null,
+      "retweetedTweet": null,
+      "features": {
+        "hasQuestion": false,
+        "hasMedia": false,
+        "hasLinks": false,
+        "hasHashtags": true,
+        "hasMentions": false,
+        "length": 95,
+        "wordCount": 17,
+        "sentiment": "neutral",
+        "topics": ["software development", "api design"],
+        "language": "en"
+      }
+    },
+    {
+      "id": "1234567890123456791",
+      "text": "Check out this amazing sunset from my hike today! 🌅",
+      "user": {
+        "id": "555666777",
+        "username": "nature_lover",
+        "displayName": "Nature Lover",
+        "bio": "Exploring the great outdoors 🏔️ | Photographer | Adventure seeker",
+        "avatar": "https://pbs.twimg.com/profile_images/nature789.jpg",
+        "verified": false,
+        "followers": 2340,
+        "following": 567,
+        "location": "Colorado, USA",
+        "url": null
+      },
+      "createdAt": "2024-03-15T19:20:00Z",
+      "engagement": {
+        "likes": 156,
+        "retweets": 23,
+        "replies": 8,
+        "views": 892
+      },
+      "urls": [],
+      "hashtags": ["#Nature", "#Hiking"],
+      "mentions": [],
+      "media": [
+        {
+          "type": "photo",
+          "url": "https://pbs.twimg.com/media/sunset123.jpg",
+          "previewUrl": "https://pbs.twimg.com/media/sunset123.jpg:small",
+          "altText": "Beautiful sunset over mountain peaks"
+        }
+      ],
+      "isRetweet": false,
+      "isReply": false,
+      "isThread": false,
+      "threadPosition": null,
+      "quotedTweet": null,
+      "retweetedTweet": null,
+      "features": {
+        "hasQuestion": false,
+        "hasMedia": true,
+        "hasLinks": false,
+        "hasHashtags": true,
+        "hasMentions": false,
+        "length": 52,
+        "wordCount": 9,
+        "sentiment": "positive",
+        "topics": ["nature", "photography"],
+        "language": "en"
+      }
+    },
+    {
+      "id": "1234567890123456792",
+      "text": "RT @tech_enthusiast: Just discovered an amazing new machine learning library! 🚀 Anyone else working with neural networks lately?",
+      "user": {
+        "id": "111222333",
+        "username": "ml_student",
+        "displayName": "ML Student",
+        "bio": "Computer Science student | Machine Learning enthusiast | Always learning",
+        "avatar": "https://pbs.twimg.com/profile_images/student101.jpg",
+        "verified": false,
+        "followers": 543,
+        "following": 1890,
+        "location": "Boston, MA",
+        "url": "https://github.com/mlstudent"
+      },
+      "createdAt": "2024-03-15T15:10:00Z",
+      "engagement": {
+        "likes": 12,
+        "retweets": 3,
+        "replies": 1,
+        "views": 234
+      },
+      "urls": [],
+      "hashtags": [],
+      "mentions": ["@tech_enthusiast"],
+      "media": [],
+      "isRetweet": true,
+      "isReply": false,
+      "isThread": false,
+      "threadPosition": null,
+      "quotedTweet": null,
+      "retweetedTweet": {
+        "id": "1234567890123456789",
+        "user": {
+          "username": "tech_enthusiast",
+          "displayName": "Tech Enthusiast"
+        }
+      },
+      "features": {
+        "hasQuestion": true,
+        "hasMedia": false,
+        "hasLinks": false,
+        "hasHashtags": false,
+        "hasMentions": true,
+        "length": 127,
+        "wordCount": 20,
+        "sentiment": "positive",
+        "topics": ["technology", "machine learning"],
+        "language": "en"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "id": "987654321",
+      "username": "tech_enthusiast",
+      "displayName": "Tech Enthusiast",
+      "bio": "Passionate about AI and machine learning. Building the future one algorithm at a time.",
+      "avatar": "https://pbs.twimg.com/profile_images/user123.jpg",
+      "verified": true,
+      "followers": 15420,
+      "following": 892,
+      "location": "San Francisco, CA",
+      "url": "https://techblog.example.com",
+      "joinDate": "2019-03-15T10:00:00Z",
+      "tweetCount": 3456,
+      "pinnedTweet": null
+    },
+    {
+      "id": "123456789",
+      "username": "dev_guru",
+      "displayName": "Development Guru",
+      "bio": "Senior Software Engineer | API Design Expert | Open Source Contributor",
+      "avatar": "https://pbs.twimg.com/profile_images/dev456.jpg",
+      "verified": false,
+      "followers": 8950,
+      "following": 1240,
+      "location": "Remote",
+      "url": "https://devguru.dev",
+      "joinDate": "2018-07-20T14:30:00Z",
+      "tweetCount": 2890,
+      "pinnedTweet": null
+    }
+  ]
+}

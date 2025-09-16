@@ -1,0 +1,15 @@
+# Core dependencies for Python 3.10+ TDD implementation
+pyyaml>=6.0.1          # YAML configuration loading
+pytest>=7.4.0          # TDD testing framework 
+requests>=2.31.0       # HTTP communication with Node.js bridge
+python-dateutil>=2.8.2 # Date/time handling and parsing
+
+# Development dependencies
+black>=23.0.0          # Code formatting
+ruff>=0.1.0           # Fast linting and formatting
+pytest-cov>=4.1.0    # Test coverage reporting
+pytest-mock>=3.11.0  # Mocking utilities for tests
+
+# Optional dependencies for enhanced functionality
+typing-extensions>=4.7.0  # Extended type hints for Python 3.10
+dataclasses-json>=0.6.0   # JSON serialization for dataclasses
