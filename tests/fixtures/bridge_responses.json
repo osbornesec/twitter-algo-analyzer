@@ -1,0 +1,89 @@
+{
+  "timeline_success": {
+    "success": true,
+    "data": [
+      {
+        "id": "1234567890123456789",
+        "text": "Sample tweet content for timeline testing",
+        "user": {
+          "id": "987654321",
+          "username": "sample_user",
+          "displayName": "Sample User",
+          "bio": "Bio for testing",
+          "followers": 1500,
+          "following": 300,
+          "avatar": "https://example.com/avatar.jpg"
+        },
+        "createdAt": "2024-01-15T10:30:00.000Z",
+        "engagement": {
+          "likes": 42,
+          "retweets": 15,
+          "replies": 8,
+          "views": 1000
+        }
+      }
+    ],
+    "metadata": {
+      "count": 1,
+      "hasMore": true
+    },
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "tweet_success": {
+    "success": true,
+    "data": {
+      "id": "1234567890123456789",
+      "text": "Sample individual tweet content",
+      "user": {
+        "id": "987654321",
+        "username": "sample_user",
+        "displayName": "Sample User",
+        "bio": "Bio for testing",
+        "followers": 1500,
+        "following": 300,
+        "avatar": "https://example.com/avatar.jpg"
+      },
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "engagement": {
+        "likes": 42,
+        "retweets": 15,
+        "replies": 8,
+        "views": 1000
+      }
+    },
+    "metadata": {},
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "authentication_error": {
+    "success": false,
+    "error": {
+      "code": "AUTHENTICATION_REQUIRED",
+      "message": "Authentication cookies are required"
+    },
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "not_found_error": {
+    "success": false,
+    "error": {
+      "code": "NOT_FOUND",
+      "message": "Tweet not found"
+    },
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "rate_limit_error": {
+    "success": false,
+    "error": {
+      "code": "RATE_LIMITED",
+      "message": "Rate limit exceeded. Please try again later."
+    },
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  "not_implemented": {
+    "success": false,
+    "error": {
+      "code": "NOT_IMPLEMENTED",
+      "message": "Feature not yet implemented due to library limitations"
+    },
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  }
+}

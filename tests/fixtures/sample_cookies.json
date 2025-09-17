@@ -1,0 +1,54 @@
+{
+  "essentials": {
+    "auth_token": "sample_auth_token_1234567890abcdef",
+    "ct0": "sample_ct0_token_abcdef123456789",
+    "twid": "u%3D1234567890%26s%3D123",
+    "guest_id": "v1%3A171234567890123456",
+    "att": "1-sample_att_token_xyz789"
+  },
+  "cookieHeader": "auth_token=sample_auth_token_1234567890abcdef; ct0=sample_ct0_token_abcdef123456789; twid=u%3D1234567890%26s%3D123; guest_id=v1%3A171234567890123456; att=1-sample_att_token_xyz789",
+  "cookies": [
+    {
+      "name": "auth_token",
+      "value": "sample_auth_token_1234567890abcdef",
+      "domain": ".x.com",
+      "path": "/",
+      "expires": 1735689600.0,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "priority": "Medium",
+      "sourcePort": 443,
+      "sourceScheme": "Secure",
+      "cookieString": "auth_token=sample_auth_token_1234567890abcdef; Domain=.x.com; Path=/; HttpOnly; Secure; SameSite=None"
+    },
+    {
+      "name": "ct0",
+      "value": "sample_ct0_token_abcdef123456789",
+      "domain": ".x.com",
+      "path": "/",
+      "expires": 1735689600.0,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax",
+      "priority": "Medium",
+      "sourcePort": 443,
+      "sourceScheme": "Secure",
+      "cookieString": "ct0=sample_ct0_token_abcdef123456789; Domain=.x.com; Path=/; Secure; SameSite=Lax"
+    },
+    {
+      "name": "twid",
+      "value": "u%3D1234567890%26s%3D123",
+      "domain": ".x.com",
+      "path": "/",
+      "expires": 1735689600.0,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "priority": "Medium",
+      "sourcePort": 443,
+      "sourceScheme": "Secure",
+      "cookieString": "twid=u%3D1234567890%26s%3D123; Domain=.x.com; Path=/; HttpOnly; Secure; SameSite=None"
+    }
+  ]
+}
