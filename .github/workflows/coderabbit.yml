@@ -1,0 +1,56 @@
+name: CodeRabbit Integration
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master, develop]
+
+jobs:
+  coderabbit-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Node.js dependencies
+        run: |
+          cd twitter_bridge
+          npm install
+
+      - name: Run Python tests
+        run: |
+          python -m pytest --cov=. --cov-report=xml
+
+      - name: Run Node.js tests
+        run: |
+          cd twitter_bridge
+          npm test
+
+      - name: Run Python linting
+        run: |
+          black --check .
+          ruff check .
+
+      - name: CodeRabbit Analysis
+        uses: coderabbitai/coderabbit-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}

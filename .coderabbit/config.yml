@@ -1,0 +1,167 @@
+# CodeRabbit Configuration for Twitter Algorithm Analyzer
+
+# Language and Framework Detection
+language: python
+frameworks:
+  - python
+  - node.js
+  - express
+  - pytest
+
+# Review Focus Areas
+review_focus:
+  - security
+  - performance
+  - maintainability
+  - test_coverage
+  - documentation
+  - best_practices
+
+# Python-specific settings
+python:
+  version: "3.12"
+  style_guide: "PEP8"
+  linting:
+    enabled: true
+    tools:
+      - black
+      - ruff
+      - mypy
+  testing:
+    framework: pytest
+    coverage_threshold: 90
+    
+# Node.js specific settings
+nodejs:
+  version: "18+"
+  framework: express
+  linting:
+    enabled: true
+    tools:
+      - eslint
+      - prettier
+  testing:
+    framework: jest
+
+# Code Quality Rules
+rules:
+  # Security
+  - no_hardcoded_secrets
+  - secure_authentication
+  - input_validation
+  - error_handling
+  
+  # Performance
+  - efficient_algorithms
+  - database_optimization
+  - caching_strategies
+  
+  # Maintainability
+  - code_complexity
+  - function_size
+  - class_design
+  - naming_conventions
+  
+  # Testing
+  - test_coverage
+  - test_quality
+  - mocking_best_practices
+
+# File Patterns to Focus On
+include_patterns:
+  - "*.py"
+  - "*.js"
+  - "*.ts"
+  - "*.json"
+  - "*.yml"
+  - "*.yaml"
+  - "*.md"
+
+# Files to Exclude from Review
+exclude_patterns:
+  - "venv/**"
+  - "__pycache__/**"
+  - "node_modules/**"
+  - "*.pyc"
+  - ".pytest_cache/**"
+  - ".mypy_cache/**"
+  - ".ruff_cache/**"
+  - "*.log"
+
+# Custom Review Instructions
+custom_instructions: |
+  This project follows Test-Driven Development (TDD) methodology.
+  
+  Key areas to focus on:
+  1. Authentication security - review cookie handling and Chrome DevTools Protocol integration
+  2. HTTP client reliability - check error handling and retry logic
+  3. Data model integrity - ensure proper normalization and validation
+  4. Test coverage - verify comprehensive test coverage for all functionality
+  5. API bridge security - review Node.js bridge endpoints and middleware
+  
+  Project structure:
+  - twitter_client.py: Main Python client with HTTP communication
+  - models.py: Data models for tweets, profiles, engagement metrics
+  - open_x_cdp.py: Chrome DevTools Protocol integration for authentication
+  - twitter_bridge/: Node.js Express API bridge
+  - tests/: Comprehensive test suite with 111 tests (37 for TwitterClient)
+
+# Severity Levels
+severity_levels:
+  security: high
+  performance: medium
+  maintainability: medium
+  documentation: low
+  style: low
+
+# Auto-fix Settings
+auto_fix:
+  enabled: false  # Manual review preferred for this project
+  safe_fixes_only: true
+
+# Integration Settings
+integrations:
+  github:
+    pull_request_reviews: true
+    issue_comments: true
+    commit_comments: false
+    
+  notifications:
+    slack: false
+    email: true
+
+# Review Templates
+review_templates:
+  security_issue: |
+    🔒 **Security Issue Detected**
+    
+    This code may introduce a security vulnerability:
+    {issue_description}
+    
+    **Recommendation:** {recommendation}
+    
+    **Priority:** High
+    
+  performance_issue: |
+    ⚡ **Performance Concern**
+    
+    This code could impact performance:
+    {issue_description}
+    
+    **Suggestion:** {recommendation}
+    
+  test_coverage: |
+    🧪 **Test Coverage**
+    
+    Consider adding tests for:
+    {missing_coverage}
+    
+    This project follows TDD methodology with comprehensive test coverage.
+    
+  code_quality: |
+    ✨ **Code Quality**
+    
+    Code improvement suggestion:
+    {issue_description}
+    
+    **Best Practice:** {recommendation}
