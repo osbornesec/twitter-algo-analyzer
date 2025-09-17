@@ -771,3 +771,23 @@ class TestTwitterClientCookieValidation:
         
         with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
             client.get_timeline()
+
+    def test_raises_error_for_incomplete_essential_cookies(self):
+        """TwitterClient raises detailed error when essentials are incomplete."""
+        client = TwitterClient()
+        incomplete_data = {
+            "essentials": {
+                "auth_token": "token",
+                "ct0": "csrf",
+                "twid": "user"
+            },
+            "cookieHeader": "auth_token=token; ct0=csrf; twid=user",
+            "cookies": []
+        }
+        client.load_cookies(incomplete_data)
+
+        with pytest.raises(
+            TwitterClientError,
+            match=r"Authentication cookies invalid or incomplete; see is_authenticated\(\) docstring for required set"
+        ):
+            client.get_timeline()

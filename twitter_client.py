@@ -31,6 +31,14 @@ class TwitterClient:
         if not hasattr(self.config, 'api') or 'base_url' not in self.config.api:
             self.config.api = {"base_url": "http://localhost:3000"}
         
+        # Set default configuration values if not provided
+        if 'timeout_seconds' not in self.config.api:
+            self.config.api['timeout_seconds'] = 30
+        if 'max_retries' not in self.config.api:
+            self.config.api['max_retries'] = 3
+        if 'backoff_base' not in self.config.api:
+            self.config.api['backoff_base'] = 2
+        
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'TwitterClient/1.0',
@@ -70,7 +78,21 @@ class TwitterClient:
         return self.cookie_data.get("cookieHeader", "")
         
     def is_authenticated(self) -> bool:
-        """Check if client has valid authentication cookies."""
+        """Determine whether essential cookies satisfy the Node bridge contract.
+
+        The Node bridge middleware (`twitter_bridge/middleware/auth.js`) enforces the
+        same cookie set that `open_x_cdp.py` captures from the Chromium debugging
+        session:
+        - auth_token: primary session authentication token issued by X/Twitter
+        - ct0: CSRF token that must accompany state-changing requests
+        - twid: binds the authenticated user to the session
+        - guest_id: gates access to some API endpoints even for authenticated users
+        - att: additional token that X validates alongside the primary session cookies
+
+        We require each of these cookies to be present and non-empty before
+        attempting to call the bridge so that outbound requests mirror the
+        expectations of the middleware layer.
+        """
         if not self.cookie_data:
             return False
         
@@ -81,12 +103,34 @@ class TwitterClient:
         
     def _check_authentication(self) -> None:
         """Raise error if not authenticated."""
+        # Check if cookie data was loaded
+        if not self.cookie_data:
+            raise TwitterClientError("Authentication cookies missing: expected 'cookieHeader' and 'essentials'")
+        
+        # Check if required fields are present
+        if 'cookieHeader' not in self.cookie_data or 'essentials' not in self.cookie_data:
+            raise TwitterClientError("Authentication cookies missing: expected 'cookieHeader' and 'essentials'")
+        
+        # Check if fields are not empty
+        cookie_header = self.cookie_data.get('cookieHeader', '')
+        essentials = self.cookie_data.get('essentials', {})
+        
+        if not cookie_header or not essentials:
+            raise TwitterClientError("Authentication cookies missing: expected 'cookieHeader' and 'essentials'")
+        
+        # Use the existing is_authenticated() logic for deeper validation
         if not self.is_authenticated():
-            raise TwitterClientError("Client is not authenticated. Load cookies first.")
+            raise TwitterClientError("Authentication cookies invalid or incomplete; see is_authenticated() docstring for required set")
             
-    def _make_request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, max_retries: int = 3) -> Dict[str, Any]:
+    def _make_request(self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, max_retries: int = None) -> Dict[str, Any]:
         """Make HTTP request to Node.js bridge with retry logic."""
         self._check_authentication()
+        
+        # Use config values if not overridden
+        if max_retries is None:
+            max_retries = self.config.api['max_retries']
+        timeout_seconds = self.config.api['timeout_seconds']
+        backoff_base = self.config.api['backoff_base']
         
         url = f"{self.config.api['base_url']}{endpoint}"
         headers = {'Cookie': self.get_cookie_header()}
@@ -101,32 +145,62 @@ class TwitterClient:
                         url, 
                         json=request_data, 
                         headers=headers,
-                        timeout=30
+                        timeout=timeout_seconds
                     )
                 else:
-                    response = self.session.get(url, headers=headers, timeout=30)
+                    response = self.session.get(url, headers=headers, timeout=timeout_seconds)
                 
                 return self._handle_response(response)
                 
             except requests.Timeout:
                 if attempt == max_retries - 1:
                     raise TwitterClientError("Request timeout - bridge may be unavailable")
-                time.sleep(2 ** attempt)  # Exponential backoff
+                time.sleep(backoff_base ** attempt)  # Exponential backoff
                 
             except requests.ConnectionError:
                 if attempt == max_retries - 1:
                     raise TwitterClientError("Connection error - unable to reach bridge")
-                time.sleep(2 ** attempt)  # Exponential backoff
+                time.sleep(backoff_base ** attempt)  # Exponential backoff
+                
+            except TwitterClientError as e:
+                # Check if this is a transient HTTP error that should be retried
+                error_msg = str(e)
+                if any(status in error_msg for status in ["HTTP 502:", "HTTP 503:", "HTTP 504:"]):
+                    if attempt == max_retries - 1:
+                        raise  # Re-raise the original error on final attempt
+                    time.sleep(backoff_base ** attempt)  # Exponential backoff
+                else:
+                    # Non-transient error, don't retry
+                    raise
                 
         raise TwitterClientError("Max retries exceeded")
         
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle HTTP response from bridge."""
+        # First check if this is an HTTP error status (>= 400)
+        if response.status_code >= 400:
+            # Try to parse JSON for error details
+            try:
+                data = response.json()
+                error = data.get('error', {})
+                error_code = error.get('code', 'UNKNOWN')
+                error_message = error.get('message', 'Unknown error')
+                
+                # Format as HTTP status error with JSON details
+                raise TwitterClientError(f"HTTP {response.status_code}: {error_code} - {error_message}")
+                
+            except json.JSONDecodeError:
+                # No valid JSON, use status code and reason phrase
+                reason = getattr(response, 'reason', 'Unknown Error')
+                raise TwitterClientError(f"HTTP {response.status_code}: {reason}")
+        
+        # Not an HTTP error status, parse normally
         try:
             data = response.json()
         except json.JSONDecodeError:
             raise TwitterClientError(f"Invalid response format: {response.text}")
             
+        # Handle application-level errors from successful HTTP responses
         if not data.get('success', False):
             error = data.get('error', {})
             error_code = error.get('code', 'UNKNOWN')
