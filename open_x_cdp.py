@@ -35,6 +35,7 @@ COOKIE_URLS = (
     "https://api.x.com",
 )
 
+
 def _request(path: str, *, method: str = "GET", expect_json: bool = True) -> dict:
     url = f"{REMOTE_DEBUGGING_BASE}{path}"
     data: bytes | None = b"" if method in {"POST", "PUT"} else None
@@ -228,6 +229,7 @@ def _format_cookie_string(cookie: dict) -> str:
 
     return "; ".join(parts)
 
+
 class _SimpleWebSocket:
     """Minimal WebSocket client for communicating with Chrome's CDP endpoint."""
 
@@ -260,7 +262,9 @@ class _SimpleWebSocket:
         finally:
             self._buffer.clear()
 
-    def call(self, method: str, params: dict | None = None, *, timeout: float = 5) -> dict:
+    def call(
+        self, method: str, params: dict | None = None, *, timeout: float = 5
+    ) -> dict:
         message_id = self._next_id
         self._next_id += 1
         payload = {"id": message_id, "method": method}
@@ -270,7 +274,11 @@ class _SimpleWebSocket:
         response = self._wait_for_response(message_id, timeout=timeout)
         if "error" in response:
             error = response["error"]
-            description = error.get("message", str(error)) if isinstance(error, dict) else str(error)
+            description = (
+                error.get("message", str(error))
+                if isinstance(error, dict)
+                else str(error)
+            )
             raise RuntimeError(f"{method} failed: {description}")
         return response
 
@@ -302,7 +310,9 @@ class _SimpleWebSocket:
 
         response = self._read_http_headers()
         if not response.startswith("HTTP/1.1 101"):
-            raise ConnectionError(f"Unexpected WebSocket handshake response: {response.splitlines()[0]}")
+            raise ConnectionError(
+                f"Unexpected WebSocket handshake response: {response.splitlines()[0]}"
+            )
 
     def _read_http_headers(self) -> str:
         while b"\r\n\r\n" not in self._buffer:
@@ -388,6 +398,7 @@ class _SimpleWebSocket:
                 raise ConnectionError("WebSocket connection closed unexpectedly")
             self._buffer.extend(chunk)
 
+
 def open_x() -> dict | None:
     chrome_proc = _ensure_debug_port_ready()
     try:
@@ -414,7 +425,9 @@ def open_x() -> dict | None:
     finally:
         # If we started Chrome, leave it running. The caller can close it when done.
         if chrome_proc:
-            print("Chrome was launched with remote debugging enabled. Close it manually when finished.")
+            print(
+                "Chrome was launched with remote debugging enabled. Close it manually when finished."
+            )
     return None
 
 
