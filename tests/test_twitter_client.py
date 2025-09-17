@@ -141,7 +141,7 @@ class TestTwitterClientCookieHandling:
         """TwitterClient raises error when attempting requests without authentication."""
         client = TwitterClient()
         
-        with pytest.raises(TwitterClientError, match="not authenticated"):
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing"):
             client.get_timeline()
 
 
@@ -486,3 +486,288 @@ class TestTwitterClientConnectionManagement:
             # Should be same session instance
             assert id(client.session) == session_id
             assert mock_post.call_count == 2
+
+
+# Additional verification tests for Comment 1: HTTP status code handling
+
+class TestTwitterClientHTTPStatusCodes:
+    """Test HTTP status code error handling."""
+    
+    def test_handles_500_with_no_json(self, authenticated_client):
+        """TwitterClient handles 500 errors with non-JSON body."""
+        with patch('requests.Session.post') as mock_post:
+            mock_response = Mock()
+            mock_response.status_code = 500
+            mock_response.reason = "Internal Server Error"
+            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+            mock_post.return_value = mock_response
+            
+            with pytest.raises(TwitterClientError, match="HTTP 500: Internal Server Error"):
+                authenticated_client.get_timeline()
+                
+    def test_handles_404_with_non_json_body(self, authenticated_client):
+        """TwitterClient handles 404 errors with non-JSON body."""
+        with patch('requests.Session.get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = 404
+            mock_response.reason = "Not Found"
+            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+            mock_get.return_value = mock_response
+            
+            with pytest.raises(TwitterClientError, match="HTTP 404: Not Found"):
+                authenticated_client.get_tweet("nonexistent")
+                
+    def test_handles_400_with_json_error(self, authenticated_client):
+        """TwitterClient handles 400 errors with JSON error response."""
+        with patch('requests.Session.post') as mock_post:
+            mock_response = Mock()
+            mock_response.status_code = 400
+            mock_response.json.return_value = {
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request data"
+                }
+            }
+            mock_post.return_value = mock_response
+            
+            with pytest.raises(TwitterClientError, match="HTTP 400: VALIDATION_ERROR - Invalid request data"):
+                authenticated_client.get_timeline()
+
+
+# Additional verification tests for Comment 2: Transient 5xx retry logic
+
+class TestTwitterClientTransientRetries:
+    """Test retry logic for transient 5xx errors."""
+    
+    @patch('requests.Session.post')
+    def test_retries_502_twice_then_succeeds(self, mock_post, authenticated_client):
+        """TwitterClient retries 502 errors with exponential backoff."""
+        # First two calls return 502, third returns 200
+        mock_responses = []
+        
+        # 502 responses
+        for _ in range(2):
+            mock_response = Mock()
+            mock_response.status_code = 502
+            mock_response.reason = "Bad Gateway"
+            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+            mock_responses.append(mock_response)
+        
+        # Success response
+        success_response = Mock()
+        success_response.status_code = 200
+        success_response.json.return_value = {"success": True, "data": []}
+        mock_responses.append(success_response)
+        
+        mock_post.side_effect = mock_responses
+        
+        with patch('time.sleep') as mock_sleep:
+            result = authenticated_client.get_timeline()
+            
+            assert mock_post.call_count == 3
+            assert mock_sleep.call_count == 2
+            # Verify exponential backoff (base 2: 1, 2)
+            sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+            assert sleep_calls == [1, 2]  # 2^0, 2^1
+            
+    @patch('requests.Session.post')  
+    def test_retries_503_and_504_errors(self, mock_post, authenticated_client):
+        """TwitterClient retries 503 and 504 errors."""
+        for status_code in [503, 504]:
+            mock_response = Mock()
+            mock_response.status_code = status_code
+            mock_response.reason = "Service Unavailable" if status_code == 503 else "Gateway Timeout"
+            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+            
+            # Create responses: error, error, success
+            mock_responses = [mock_response, mock_response]
+            success_response = Mock()
+            success_response.status_code = 200
+            success_response.json.return_value = {"success": True, "data": []}
+            mock_responses.append(success_response)
+            
+            mock_post.side_effect = mock_responses
+            
+            with patch('time.sleep'):
+                result = authenticated_client.get_timeline()
+                assert mock_post.call_count == 3
+                
+            mock_post.reset_mock()
+            
+    @patch('requests.Session.post')
+    def test_does_not_retry_non_transient_errors(self, mock_post, authenticated_client):
+        """TwitterClient does not retry non-transient 4xx/5xx errors."""
+        for status_code in [400, 401, 404, 500]:
+            mock_response = Mock()
+            mock_response.status_code = status_code
+            mock_response.reason = "Error"
+            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+            mock_post.return_value = mock_response
+            
+            with pytest.raises(TwitterClientError):
+                authenticated_client.get_timeline()
+                
+            # Should only make one attempt for non-transient errors
+            assert mock_post.call_count == 1
+            mock_post.reset_mock()
+
+
+# Additional verification tests for Comment 3: Configurable timeout/retry settings
+
+class TestTwitterClientConfigurableSettings:
+    """Test configurable timeout and retry settings."""
+    
+    def test_uses_custom_timeout_from_config(self, sample_cookie_data):
+        """TwitterClient uses custom timeout from AppConfig."""
+        custom_config = AppConfig()
+        custom_config.api = {
+            "base_url": "http://localhost:3000",
+            "timeout_seconds": 60,
+            "max_retries": 5,
+            "backoff_base": 3
+        }
+        
+        client = TwitterClient(config=custom_config)
+        client.load_cookies(sample_cookie_data)
+        
+        with patch('requests.Session.post') as mock_post:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {"success": True, "data": []}
+            mock_post.return_value = mock_response
+            
+            client.get_timeline()
+            
+            # Verify custom timeout was used
+            call_args = mock_post.call_args
+            assert call_args[1]["timeout"] == 60
+            
+    def test_uses_custom_backoff_base(self, sample_cookie_data):
+        """TwitterClient uses custom backoff base from AppConfig."""
+        custom_config = AppConfig()
+        custom_config.api = {
+            "base_url": "http://localhost:3000",
+            "timeout_seconds": 30,
+            "max_retries": 3,
+            "backoff_base": 3  # Custom base 3 instead of 2
+        }
+        
+        client = TwitterClient(config=custom_config)
+        client.load_cookies(sample_cookie_data)
+        
+        with patch('requests.Session.post', side_effect=requests.ConnectionError) as mock_post:
+            with patch('time.sleep') as mock_sleep:
+                with pytest.raises(TwitterClientError):
+                    client.get_timeline()
+                    
+                # Verify custom backoff base was used (3^0=1, 3^1=3, 3^2=9)
+                sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+                assert len(sleep_calls) >= 2
+                assert sleep_calls[0] == 1  # 3^0
+                assert sleep_calls[1] == 3  # 3^1
+                
+    def test_uses_custom_max_retries(self, sample_cookie_data):
+        """TwitterClient uses custom max_retries from AppConfig."""
+        custom_config = AppConfig()
+        custom_config.api = {
+            "base_url": "http://localhost:3000",
+            "timeout_seconds": 30,
+            "max_retries": 5,  # Custom max retries
+            "backoff_base": 2
+        }
+        
+        client = TwitterClient(config=custom_config)
+        client.load_cookies(sample_cookie_data)
+        
+        with patch('requests.Session.post', side_effect=requests.ConnectionError) as mock_post:
+            with pytest.raises(TwitterClientError):
+                client.get_timeline()
+                
+            # Should attempt 5 times (max_retries = 5)
+            assert mock_post.call_count == 5
+            
+    def test_default_configuration_values(self):
+        """TwitterClient sets default configuration values when not provided."""
+        client = TwitterClient()
+        
+        assert client.config.api['timeout_seconds'] == 30
+        assert client.config.api['max_retries'] == 3
+        assert client.config.api['backoff_base'] == 2
+
+
+# Additional verification tests for Comment 5: Missing/empty cookie validation
+
+class TestTwitterClientCookieValidation:
+    """Test cookie validation guardrails."""
+    
+    def test_raises_error_for_missing_cookie_data(self):
+        """TwitterClient raises error when cookie_data is None."""
+        client = TwitterClient()
+        # Don't load any cookie data
+        
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
+            client.get_timeline()
+            
+    def test_raises_error_for_empty_cookie_header(self):
+        """TwitterClient raises error when cookieHeader is empty."""
+        client = TwitterClient()
+        incomplete_data = {
+            "essentials": {
+                "auth_token": "token",
+                "ct0": "csrf", 
+                "twid": "user",
+                "guest_id": "guest",
+                "att": "att"
+            },
+            "cookieHeader": "",  # Empty cookie header
+            "cookies": []
+        }
+        client.load_cookies(incomplete_data)
+        
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
+            client.get_timeline()
+            
+    def test_raises_error_for_empty_essentials(self):
+        """TwitterClient raises error when essentials is empty."""
+        client = TwitterClient()
+        incomplete_data = {
+            "essentials": {},  # Empty essentials
+            "cookieHeader": "auth_token=token; ct0=csrf",
+            "cookies": []
+        }
+        client.load_cookies(incomplete_data)
+        
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
+            client.get_timeline()
+            
+    def test_raises_error_for_missing_essentials_key(self):
+        """TwitterClient raises error when essentials key is missing."""
+        client = TwitterClient()
+        incomplete_data = {
+            # Missing essentials key entirely
+            "cookieHeader": "auth_token=token; ct0=csrf",
+            "cookies": []
+        }
+        client.load_cookies(incomplete_data)
+        
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
+            client.get_timeline()
+            
+    def test_raises_error_for_missing_cookie_header_key(self):
+        """TwitterClient raises error when cookieHeader key is missing."""
+        client = TwitterClient()
+        incomplete_data = {
+            "essentials": {
+                "auth_token": "token",
+                "ct0": "csrf",
+                "twid": "user", 
+                "guest_id": "guest",
+                "att": "att"
+            },
+            # Missing cookieHeader key entirely
+            "cookies": []
+        }
+        client.load_cookies(incomplete_data)
+        
+        with pytest.raises(TwitterClientError, match="Authentication cookies missing: expected 'cookieHeader' and 'essentials'"):
+            client.get_timeline()
